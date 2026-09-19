@@ -22,4 +22,8 @@ public record AccountPaggingRequest(
             direction = direction.toLowerCase();
         }
     }
+
+    public int getJpaPage() {
+        return this.page - 1;
+    }
 }
