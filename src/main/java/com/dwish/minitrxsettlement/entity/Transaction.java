@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-
+@Entity
 @Getter
 @Setter
 @Table(name = "transaction")
