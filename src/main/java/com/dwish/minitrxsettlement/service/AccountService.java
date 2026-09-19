@@ -25,7 +25,7 @@ public class AccountService {
                 ? Sort.by(sortBy).descending()
                 : Sort.by(sortBy).ascending();
 
-        Pageable pageable = PageRequest.of(request.page(), request.size(), sort);
+        Pageable pageable = PageRequest.of(request.getJpaPage(), request.size(), sort);
 
         return accountRepository.findAll(pageable)
                 .map(AccountMapper::toResponse);
