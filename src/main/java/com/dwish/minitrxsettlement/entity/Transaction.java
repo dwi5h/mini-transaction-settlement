@@ -22,10 +22,13 @@ public class Transaction {
 
     private UUID accountId;
 
+    @Column(nullable = false, length = 30)
     private String type;
 
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
+    @Column(nullable = false, length = 50)
     private String status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
