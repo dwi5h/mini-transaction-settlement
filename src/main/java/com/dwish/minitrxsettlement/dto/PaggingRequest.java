@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
-public record AccountPaggingRequest(
+public record PaggingRequest(
         @Min(value = 1, message = "Halaman minimal adalah 1")
         int page,
 
@@ -17,7 +17,7 @@ public record AccountPaggingRequest(
         @Pattern(regexp = "^(?i)(asc|desc)$", message = "Direction harus bernilai 'asc' atau 'desc'")
         String direction
 ) {
-    public AccountPaggingRequest {
+    public PaggingRequest {
         if (direction != null) {
             direction = direction.toLowerCase();
         }

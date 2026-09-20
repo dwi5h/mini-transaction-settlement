@@ -1,7 +1,7 @@
 package com.dwish.minitrxsettlement.controller;
 
 
-import com.dwish.minitrxsettlement.dto.AccountPaggingRequest;
+import com.dwish.minitrxsettlement.dto.PaggingRequest;
 import com.dwish.minitrxsettlement.dto.AccountResponse;
 import com.dwish.minitrxsettlement.service.AccountService;
 import jakarta.validation.Valid;
@@ -31,7 +31,7 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<AccountResponse>> getAllAccounts(@Valid AccountPaggingRequest request) {
+    public ResponseEntity<Page<AccountResponse>> getAllAccounts(@Valid PaggingRequest request) {
         log.info("REST request untuk mendapatkan semua produk. Halaman: {}, Ukuran: {}, ({})",
                 request.page(), request.size(), request.direction());
 
