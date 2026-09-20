@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler({HandlerMethodValidationException.class, ConstraintViolationException.class})
+    @ExceptionHandler({HandlerMethodValidationException.class, ConstraintViolationException.class, MethodArgumentNotValidException.class})
     public ProblemDetail handleMethodValidationErrors(Exception ex, HttpServletRequest request) {
         log.warn("Gagal memvalidasi parameter permintaan pada URI: {}", request.getRequestURI());
 
@@ -30,7 +31,12 @@ public class GlobalExceptionHandler {
 
         Map<String, String> errors = new HashMap<>();
 
-        if (ex instanceof HandlerMethodValidationException validationEx) {
+        if (ex instanceof MethodArgumentNotValidException validationEx) {
+            validationEx.getBindingResult().getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage())
+            );
+        }
+        else if (ex instanceof HandlerMethodValidationException validationEx) {
             validationEx.getParameterValidationResults().forEach(result -> {
                 String paramName = result.getMethodParameter().getParameterName();
                 result.getResolvableErrors().forEach(error ->
