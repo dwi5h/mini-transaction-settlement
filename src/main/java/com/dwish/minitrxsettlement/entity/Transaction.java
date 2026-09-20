@@ -1,7 +1,6 @@
 package com.dwish.minitrxsettlement.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
 import lombok.*;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +12,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Table(name = "transaction")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor()
 public class Transaction {
 
     @Id
