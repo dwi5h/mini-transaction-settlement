@@ -1,6 +1,6 @@
 package com.dwish.minitrxsettlement.service;
 
-import com.dwish.minitrxsettlement.dto.AccountPaggingRequest;
+import com.dwish.minitrxsettlement.dto.PaggingRequest;
 import com.dwish.minitrxsettlement.dto.AccountResponse;
 import com.dwish.minitrxsettlement.exception.ResourceNotFoundException;
 import com.dwish.minitrxsettlement.mapper.AccountMapper;
@@ -19,7 +19,7 @@ public class AccountService {
 
     private final AccountRepository accountRepository;
 
-    public Page<AccountResponse> getAllAccounts(AccountPaggingRequest request) {
+    public Page<AccountResponse> getAllAccounts(PaggingRequest request) {
         String sortBy = "createdAt";
         Sort sort = request.direction().equalsIgnoreCase(Sort.Direction.DESC.name())
                 ? Sort.by(sortBy).descending()
@@ -34,6 +34,6 @@ public class AccountService {
     public AccountResponse getAccountById(UUID id) {
         return accountRepository.findById(id)
                 .map(AccountMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Produk dengan ID " + id + " tidak ditemukan"));
+                .orElseThrow(() -> new ResourceNotFoundException("Account dengan ID " + id + " tidak ditemukan"));
     }
 }
