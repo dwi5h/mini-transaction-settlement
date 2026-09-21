@@ -1,8 +1,6 @@
 package com.dwish.minitrxsettlement.controller;
 
-
-import com.dwish.minitrxsettlement.dto.PaggingRequest;
-import com.dwish.minitrxsettlement.dto.AccountResponse;
+import com.dwish.minitrxsettlement.dto.*;
 import com.dwish.minitrxsettlement.service.AccountService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,5 +36,15 @@ public class AccountController {
         Page<AccountResponse> accounts = accountService.getAllAccounts(request);
 
         return ResponseEntity.ok(accounts);
+    }
+
+    @PostMapping
+    public ResponseEntity<AccountResponse> create(@Valid @RequestBody AccountCreateRequest request) {
+        log.info("REST request untuk membuat account baru. Account-id: {}",
+                request.name());
+
+        AccountResponse response = accountService.create(request);
+
+        return ResponseEntity.accepted().body(response);
     }
 }

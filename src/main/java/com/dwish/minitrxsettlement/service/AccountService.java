@@ -1,10 +1,11 @@
 package com.dwish.minitrxsettlement.service;
 
-import com.dwish.minitrxsettlement.dto.PaggingRequest;
-import com.dwish.minitrxsettlement.dto.AccountResponse;
+import com.dwish.minitrxsettlement.dto.*;
+import com.dwish.minitrxsettlement.entity.Account;
 import com.dwish.minitrxsettlement.exception.ResourceNotFoundException;
 import com.dwish.minitrxsettlement.mapper.AccountMapper;
 import com.dwish.minitrxsettlement.repository.AccountRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,5 +36,13 @@ public class AccountService {
         return accountRepository.findById(id)
                 .map(AccountMapper::toResponse)
                 .orElseThrow(() -> new ResourceNotFoundException("Account dengan ID " + id + " tidak ditemukan"));
+    }
+
+    @Transactional
+    public AccountResponse create(AccountCreateRequest request) {
+        Account account = AccountMapper.toEntityCreate(request);
+        Account savedAccount = accountRepository.save(account);
+
+        return AccountMapper.toResponse(savedAccount);
     }
 }
