@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ public class TransactionController {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionController.class);
     private final TransactionService transactionService;
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @GetMapping("/{id}")
     public ResponseEntity<TransactionResponse> getTransactionById(@PathVariable UUID id) {
@@ -46,7 +48,7 @@ public class TransactionController {
                 request.accountId());
 
         TransactionResponse response = transactionService.createPending(request);
-        // KAFKA SEND HERE
+        kafkaTemplate.send("txn-requested", response.getId().toString());
 
         return ResponseEntity.accepted().body(response);
     }
