@@ -1,5 +1,7 @@
 package com.dwish.minitrxsettlement.entity;
 
+import com.dwish.minitrxsettlement.dto.TransactionStatus;
+import com.dwish.minitrxsettlement.dto.TransactionType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.NoArgsConstructor;
@@ -19,16 +21,18 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    private UUID accountId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_id", nullable = false)
+    private Account account;
 
-    @Column(nullable = false, length = 30)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private TransactionType type;
 
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 50)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TransactionStatus status;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
