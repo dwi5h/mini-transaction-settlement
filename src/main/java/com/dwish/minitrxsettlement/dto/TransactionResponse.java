@@ -17,11 +17,11 @@ public class TransactionResponse {
 
     private UUID accountId;
 
-    private String type;
+    private TransactionType type;
 
     private BigDecimal amount;
 
-    private String status;
+    private TransactionStatus status;
 
     private Instant createdAt;
 

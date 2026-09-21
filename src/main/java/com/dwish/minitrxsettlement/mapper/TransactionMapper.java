@@ -2,6 +2,9 @@ package com.dwish.minitrxsettlement.mapper;
 
 import com.dwish.minitrxsettlement.dto.TransactionCreateRequest;
 import com.dwish.minitrxsettlement.dto.TransactionResponse;
+import com.dwish.minitrxsettlement.dto.TransactionStatus;
+import com.dwish.minitrxsettlement.dto.TransactionType;
+import com.dwish.minitrxsettlement.entity.Account;
 import com.dwish.minitrxsettlement.entity.Transaction;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +19,7 @@ public class TransactionMapper {
 
         TransactionResponse result = new TransactionResponse();
         result.setId(transaction.getId());
-        result.setAccountId(transaction.getAccountId());
+        result.setAccountId(transaction.getAccount().getId());
         result.setType(transaction.getType());
         result.setAmount(transaction.getAmount());
         result.setStatus(transaction.getStatus());
@@ -26,15 +29,15 @@ public class TransactionMapper {
         return result;
     }
 
-    public static Transaction createPending(TransactionCreateRequest request) {
+    public static Transaction createPending(TransactionCreateRequest request, Account account) {
         if (request == null) return null;
 
         Transaction result = new Transaction();
         result.setId(UUID.randomUUID());
-        result.setAccountId(request.accountId());
-        result.setType(request.type());
+        result.setAccount(account);
+        result.setType(TransactionType.valueOf(request.type()));
         result.setAmount(request.amount());
-        result.setStatus("PENDING");
+        result.setStatus(TransactionStatus.PENDING);
         result.setCreatedAt(Instant.now());
         result.setProcessedAt(null);
 
