@@ -46,7 +46,7 @@ public class TransactionService {
 
     @Transactional
     public TransactionResponse createPending(TransactionCreateRequest request) {
-        Account account = accountRepository.findById(request.accountId())
+        Account account = accountRepository.findById(UUID.fromString(request.accountId()))
                 .orElseThrow(() -> new ResourceNotFoundException("Account ID " + request.accountId() + " tidak ditemukan"));
 
         Transaction transaction = TransactionMapper.createPending(request, account);
