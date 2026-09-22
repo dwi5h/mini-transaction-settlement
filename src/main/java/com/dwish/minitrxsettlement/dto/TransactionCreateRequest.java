@@ -7,7 +7,7 @@ import java.util.UUID;
 
 public record TransactionCreateRequest(
         @NotBlank(message = "Account Id tidak boleh kosong")
-        UUID accountId,
+        String accountId,
 
         @NotNull(message = "Amount tidak boleh kosong")
         @Positive(message = "Amount harus lebih besar dari 0")
