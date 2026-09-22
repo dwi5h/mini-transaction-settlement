@@ -33,14 +33,12 @@ public class TransactionMapper {
         if (request == null) return null;
 
         Transaction result = new Transaction();
-        result.setId(UUID.randomUUID());
         result.setAccount(account);
         result.setType(TransactionType.valueOf(request.type()));
         result.setAmount(request.amount());
         result.setStatus(TransactionStatus.PENDING);
         result.setCreatedAt(Instant.now());
         result.setProcessedAt(null);
-
         return result;
     }
 }
