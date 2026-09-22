@@ -26,7 +26,6 @@ public class AccountMapper {
 
     public static Account toEntityCreate(AccountCreateRequest account) {
         Account result = new Account();
-        result.setId(UUID.randomUUID());
         result.setName(account.name());
         result.setCif(account.cif());
         result.setBalance(new BigDecimal(0));
