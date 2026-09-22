@@ -37,6 +37,6 @@ public class Transaction {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "processed_at", nullable = false, updatable = false)
+    @Column(name = "processed_at")
     private Instant processedAt;
 }
