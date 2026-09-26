@@ -34,4 +34,4 @@ build/
 
 ### Configuration ###
 **/application-local.properties
-**/crets/**
+**/certs/**
