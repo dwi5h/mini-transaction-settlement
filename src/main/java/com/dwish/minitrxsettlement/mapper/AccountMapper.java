@@ -28,8 +28,13 @@ public class AccountMapper {
         Account result = new Account();
         result.setName(account.name());
         result.setCif(account.cif());
-        result.setBalance(new BigDecimal(0));
         result.setCreatedAt(Instant.now());
+        if (account.initialBalance() != null) {
+            result.setBalance(account.initialBalance());
+        }
+        else {
+            result.setBalance(new BigDecimal(0));
+        }
 
         return result;
     }
