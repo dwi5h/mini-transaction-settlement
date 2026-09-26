@@ -2,7 +2,7 @@
 
 A small, production-style transaction settlement backend built to practice event-driven, concurrency-safe processing patterns — inspired by real-world banking transaction migration and settlement work.
 
-> 🚧 **Status: Phase 1 (MVP) complete.** Core account/transaction flow and async settlement via Kafka are working end to end. See [Roadmap](#roadmap) for what's next.
+> 🚧 **Status: Phase 1 (MVP) complete**, with validation hardening, pagination, Swagger docs, and initial unit tests added. See [Roadmap](#roadmap) for what's next.
 
 ## Overview
 
@@ -12,7 +12,9 @@ It's built to demonstrate:
 - Async, event-driven processing with Kafka (producer/consumer within a single service)
 - Concurrency-safe balance updates using pessimistic database locking
 - Idempotent message handling (safe against duplicate Kafka delivery)
-- Clean layered architecture (controller → service → repository) with centralized error handling
+- Clean layered architecture (controller → service → repository) with centralized, RFC 7807–compliant error handling
+- Input validation that fails fast with proper `400` responses instead of leaking `500`s
+- Unit-tested core business logic (settlement state transitions)
 
 ## Architecture
 
@@ -34,24 +36,29 @@ The controller and worker live in the **same Spring Boot application** — Kafka
 
 ## Tech Stack
 
-- **Java 21 / Spring Boot 4.1.1**
+- **Java 21 / Spring Boot**
 - **Spring Web** — REST API
-- **Spring Data JPA** — persistence, pagination
-- **Spring Kafka** — async producer/consumer
+- **Spring Data JPA** — persistence, pagination, pessimistic locking
+- **Spring Kafka** — async producer/consumer, SSL-secured connection
 - **PostgreSQL** — via [Neon](https://neon.tech) (serverless Postgres)
-- **Apache Kafka** — via [Aiven](https://aiven.io) (managed Kafka, free tier)
-- **Bean Validation (Jakarta Validation)** — request validation
+- **Apache Kafka** — via [Aiven](https://aiven.io) (managed Kafka, free tier, SSL/keystore auth)
+- **Bean Validation (Jakarta Validation)** — request validation, including pattern-based checks on IDs and enum-like fields
+- **springdoc-openapi** — interactive Swagger UI (`/swagger-ui.html`)
 - **Lombok** — boilerplate reduction
 - **RFC 7807 `ProblemDetail`** — structured, standardized error responses
+- **JUnit 5 + Mockito** — unit tests for core service logic
 
-## Features (Phase 1)
+## Features
 
-- Create and retrieve accounts, with paginated listing
+- Create and retrieve accounts, with paginated listing and optional initial balance
 - Submit a transaction (`DEBIT`/`CREDIT`) for async settlement
 - Poll transaction status (`PENDING` → `PROCESSED` / `FAILED`)
 - Concurrency-safe balance updates via pessimistic row locking, preventing overdrafts from simultaneous transactions on the same account
 - Idempotent settlement — safe to process the same Kafka message twice without double-applying a balance change
+- Strict request validation (UUID format, enum values, positive amounts) returning clean `400` errors instead of server errors on bad input
 - Centralized exception handling with consistent `ProblemDetail` JSON error responses
+- Interactive API docs via Swagger UI
+- Unit tests covering the core settlement state machine
 
 ## How It Works: The Async Settlement Flow
 
@@ -68,43 +75,51 @@ The controller and worker live in the **same Spring Boot application** — Kafka
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/account` | Create a new account |
+| `POST` | `/api/account` | Create a new account (optional `initialBalance`, defaults to 0) |
 | `GET` | `/api/account/{id}` | Get an account by ID |
 | `GET` | `/api/account?page=&size=&direction=` | List accounts (paginated) |
 | `POST` | `/api/transaction` | Submit a transaction for async settlement (`202 Accepted`) |
 | `GET` | `/api/transaction/{id}` | Get a transaction's current status |
 | `GET` | `/api/transaction?page=&size=&direction=` | List transactions (paginated) |
 
+Full interactive documentation is available at `/swagger-ui.html` once the app is running.
+
 ## Getting Started
 
 ### Prerequisites
-- JDK 21+
+- JDK 21
 - Maven
 - A PostgreSQL database (e.g. a free [Neon](https://neon.tech) instance)
-- A Kafka broker (e.g. a free [Aiven](https://aiven.io) Kafka service)
+- A Kafka broker with SSL auth (e.g. a free [Aiven](https://aiven.io) Kafka service), with your keystore/truststore files
 
 ### Configuration
 
-Set the following as environment variables (or in `application.properties`):
+Set the following as environment variables:
 
 ```
-spring.datasource.url=${JDBC_URL}
-spring.datasource.username=${JDBC_USER}
-spring.datasource.password=${JDBC_PASSWORD}
+JDBC_URL=jdbc:postgresql://<your-neon-host>/<db>?sslmode=require
+JDBC_USER=<your-db-username>
+JDBC_PASSWORD=<your-db-password>
 
-spring.kafka.bootstrap-servers=${KAFKA_URL}
-
-spring.kafka.ssl.trust-store-location=${TRUSTORE_FILE}
-spring.kafka.properties.ssl.truststore.password=${TRUSTORE_PASSWORD}
-
-spring.kafka.ssl.key-store-location=${KEYSTORE_FILE}
-spring.kafka.properties.ssl.keystore.password=${KEYSTORE_PASSWORD}
+KAFKA_URL=<your-aiven-host>:<port>
+TRUSTORE_FILE=file:/path/to/truststore.jks
+TRUSTORE_PASSWORD=<your-truststore-password>
+KEYSTORE_FILE=file:/path/to/keystore.p12
+KEYSTORE_PASSWORD=<your-keystore-password>
 ```
+
+> ⚠️ Never commit keystore/truststore files or real credentials. They're excluded via `.gitignore` — keep it that way.
 
 ### Run
 
 ```bash
 mvn spring-boot:run
+```
+
+### Run Tests
+
+```bash
+mvn test
 ```
 
 ### Example Requests
@@ -113,7 +128,7 @@ mvn spring-boot:run
 # Create an account
 curl -X POST http://localhost:8080/api/account \
   -H "Content-Type: application/json" \
-  -d '{"name": "Dwi Septihadi", "cif": "CIF00123"}'
+  -d '{"name": "Dwi Septihadi", "cif": "CIF00123", "initialBalance": 100000}'
 
 # Submit a transaction
 curl -X POST http://localhost:8080/api/transaction \
@@ -129,16 +144,27 @@ curl http://localhost:8080/api/transaction/<transaction-uuid>
 - **Why `202 Accepted`, not `200 OK`?** The transaction isn't settled yet when the API responds — `202` honestly communicates "accepted for processing," matching real async settlement semantics.
 - **Why re-check the balance in the worker instead of trusting the initial request?** Between submission and processing, other transactions on the same account may have already been queued. Re-validating against the current, row-locked balance right before applying the change is what actually prevents overdrafts under concurrent load — checking once at submission time would not be safe.
 - **Why send only the transaction ID over Kafka, not the full payload?** Forces the worker to re-fetch current state from the database rather than potentially acting on stale data from the message.
+- **Why regex-validate `accountId` and `type` in the request DTO?** Without it, an invalid UUID or an unrecognized transaction type would fail deep in the mapper/service layer with an unchecked exception, surfacing as a `500`. Validating at the boundary means bad input fails fast and clearly with a `400`, not a false alarm that looks like a server bug.
+
+## Testing
+
+Unit tests cover the core settlement logic in `TransactionService`:
+- Sufficient balance → `PROCESSED`, balance correctly debited/credited
+- Insufficient balance on `DEBIT` → `FAILED`, balance left untouched
+- Idempotency — a transaction already settled is not reprocessed (protects against duplicate Kafka delivery)
+- Not-found cases for both transaction and account
+- `createPending()` correctly maps a valid request and correctly rejects an unknown account
+
+Run with `mvn test`.
 
 ## Roadmap
 
 Small, incremental additions planned for future phases:
 
 - [ ] Dead-letter topic and retry handling for failed message processing
-- [ ] OpenAPI/Swagger documentation
-- [ ] Unit tests for `TransactionService.settle()` (happy path, insufficient balance, duplicate-message idempotency)
 - [ ] Filter transactions by account ID
 - [ ] Basic logging/metrics for observability
+- [ ] Integration test with an embedded/test Kafka broker and database
 
 ## Author
 
