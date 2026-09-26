@@ -6,7 +6,6 @@ import com.dwish.minitrxsettlement.entity.Account;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.UUID;
 
 @NoArgsConstructor
 public class AccountMapper {

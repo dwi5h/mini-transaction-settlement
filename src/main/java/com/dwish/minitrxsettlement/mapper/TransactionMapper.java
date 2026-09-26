@@ -9,7 +9,6 @@ import com.dwish.minitrxsettlement.entity.Transaction;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
-import java.util.UUID;
 
 @NoArgsConstructor
 public class TransactionMapper {

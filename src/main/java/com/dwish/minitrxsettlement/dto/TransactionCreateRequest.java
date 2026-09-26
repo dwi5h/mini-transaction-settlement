@@ -3,7 +3,6 @@ package com.dwish.minitrxsettlement.dto;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 public record TransactionCreateRequest(
         @NotBlank(message = "Account Id tidak boleh kosong")
