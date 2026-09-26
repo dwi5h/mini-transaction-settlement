@@ -34,7 +34,8 @@ public class TransactionMapper {
 
         Transaction result = new Transaction();
         result.setAccount(account);
-        result.setType(TransactionType.valueOf(request.type()));
+        TransactionType type = TransactionType.valueOf(request.type().toUpperCase());
+        result.setType(type);
         result.setAmount(request.amount());
         result.setStatus(TransactionStatus.PENDING);
         result.setCreatedAt(Instant.now());
